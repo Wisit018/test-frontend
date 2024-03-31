@@ -13,75 +13,116 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import { Link, ButtonGroup, Switch } from "@mui/material";
 
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-  createData("Frozen yoghurt", 159, 6.0, 24, 4.0),
-  createData("Ice cream sandwich", 237, 9.0, 37, 4.3),
-  createData("Eclair", 262, 16.0, 24, 6.0),
-  createData("Cupcake", 305, 3.7, 67, 4.3),
-  createData("Gingerbread", 356, 16.0, 49, 3.9),
-];
+import { FaRegEdit, FaEye } from "react-icons/fa";
+import { MdDeleteForever } from "react-icons/md";
 
 export default function News() {
+  const [data, setData] = useState([]);
 
-    // Ajax React
-    const [items, setItems] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "https://ba-sit.uapi.app/uapi/drt-ElectronicsDocument/ED-GetNews?EmployeeId=3"
+        );
+        const result = await response.json();
+        setData(result.data); // Assuming data is in result.data
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
 
-    useEffect(() => {
-        fetch("https://ba-sit.uapi.app/uapi/drt-ElectronicsDocument/ED-GetNews?EmployeeId=3")
-          .then(res => res.json())
-          .then(
-            (result) => {
-              setItems(result);
-            },
-          )
-      }, [])
+    fetchData();
+  }, []);
+
+  const handleDelete = (index) => {
+    const newData = [...data];
+    newData.splice(index, 1); // Remove item at index
+    setData(newData);
+  };
 
   return (
     <React.Fragment>
       <CssBaseline />
       <Container maxWidth="lg" sx={{ p: 2 }}>
-        <Paper sx={{ p: 2 }}>
-          {/* <h1>ข่าวประชาสัมพันธ์</h1> */}
-          <Box display="flex">
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" gutterBottom>
-                รายการข่าวประชาสัมพันธ์
-              </Typography>
-            </Box>
-            <Box>
-              <Button variant="contained">เพิ่มข่าว</Button>
-            </Box>
+        <Paper sx={{ p: 2, backgroundColor: "#f5f5f5" }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+            <Typography variant="h6">รายการข่าวประชาสัมพันธ์</Typography>
+            <Link href="create">
+              <Button variant="contained" color="primary">เพิ่มข่าว</Button>
+            </Link>
           </Box>
-            {/* ตาราง */}
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} sx={{ backgroundColor: "#fff" }}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
               <TableHead>
                 <TableRow>
-                  <TableCell>สถานะ</TableCell>
-                  <TableCell align="right">ลำดับ</TableCell>
-                  <TableCell align="right">ชื่อเรื่อง</TableCell>
-                  <TableCell align="right">วันที่สร้าง</TableCell>
-                  <TableCell align="right">จัดการ</TableCell>
+                  <TableCell align="left"></TableCell>
+                  <TableCell align="left">ลำดับ</TableCell>
+                  <TableCell align="left">ชื่อเรื่อง</TableCell>
+                  <TableCell align="left">วันที่สร้าง</TableCell>
+                  <TableCell align="center">จัดการ</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row) => (
+                {data.map((item, index) => (
                   <TableRow
-                    key={row.name}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    key={item.NewsId}
+                    sx={{
+                      "&:last-child td, &:last-child th": { border: 0 },
+                    }}
                   >
                     <TableCell component="th" scope="row">
-                      {row.name}
+                      <Switch
+                        color="success"
+                        variant="solid"
+                        checked={item.Status === 1}
+                        onChange={(e) => {
+                          const newData = [...data];
+                          newData[index].Status = e.target.checked ? 1 : 0;
+                          setData(newData);
+                        }}
+                      />
                     </TableCell>
-                    <TableCell align="right">{row.calories}</TableCell>
-                    <TableCell align="right">{row.fat}</TableCell>
-                    <TableCell align="right">{row.carbs}</TableCell>
-                    <TableCell align="right">{row.protein}</TableCell>
+                    <TableCell component="th" scope="row">
+                      {item.NewsId}
+                    </TableCell>
+                    <TableCell align="left">{item.NameNews}</TableCell>
+                    <TableCell align="left">{item.UpdatedDate}</TableCell>
+                    <TableCell align="center">
+                      <ButtonGroup
+                        variant="contained"
+                        aria-label="plain button group"
+                        size="large"
+                      >
+                        {item.ButtonView === 1 && (
+                          <Button
+                            onClick={() =>
+                              (window.location.href = `/view/${item.NewsId}`)
+                            }
+                          >
+                            <FaEye />
+                          </Button>
+                        )}
+                        {item.ButtonEdit === 1 && (
+                          <Button
+                            onClick={() =>
+                              (window.location.href = `/update/${item.NewsId}`)
+                            }
+                          >
+                            <FaRegEdit />
+                          </Button>
+                        )}
+                        {item.ButtonDelete === 1 && (
+                          <Button
+                            onClick={() => handleDelete(index)}
+                          >
+                            <MdDeleteForever />
+                          </Button>
+                        )}
+                      </ButtonGroup>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
